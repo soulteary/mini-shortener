@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -37,13 +36,13 @@ var appPort = defaultPort
 
 func loadRules() (links []Link) {
 	if _, err := os.Stat(rulesFile); errors.Is(err, os.ErrNotExist) {
-		fmt.Println(WARN_RULE_NOT_FOUND)
+		log.Println(WARN_RULE_NOT_FOUND)
 		return links
 	}
 
 	file, err := os.Open(rulesFile)
 	if err != nil {
-		fmt.Println(ERROR_CAN_NOT_OPEN_RULE)
+		log.Println(ERROR_CAN_NOT_OPEN_RULE)
 		log.Fatal(err)
 	}
 	defer file.Close()
@@ -59,8 +58,8 @@ func loadRules() (links []Link) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Println(WARN_SCAN_RULE_ERR)
-		fmt.Println(err)
+		log.Println(WARN_SCAN_RULE_ERR)
+		log.Println(err)
 	}
 	return links
 }
@@ -74,8 +73,8 @@ func parseRules(input string) (link Link) {
 		link.To = match[2]
 		return link
 	} else {
-		fmt.Println(WARN_PARSE_RULE_ERR)
-		fmt.Println(input)
+		log.Println(WARN_PARSE_RULE_ERR)
+		log.Println(input)
 	}
 	return link
 }
@@ -84,7 +83,7 @@ var defaults = []byte("Silence is gold")
 
 func route(w http.ResponseWriter, r *http.Request) {
 	if redir, ok := links[r.URL.Path]; ok {
-		fmt.Printf("[%s] %s => %s\n", time.Now().Format("2006/01/02 15:04:05"), r.URL.Path, redir)
+		log.Printf("%s => %s\n", r.URL.Path, redir)
 		http.Redirect(w, r, redir, http.StatusTemporaryRedirect)
 	} else {
 		w.Write(defaults)
@@ -103,7 +102,6 @@ func init() {
 
 	userArgs := os.Args[1:]
 	if len(userArgs) == 0 {
-		fmt.Println(userArgs)
 		if portEnv != defaultPort {
 			appPort = portEnv
 		}
@@ -118,9 +116,10 @@ func init() {
 	}
 
 	for _, link := range loadRules() {
-		fmt.Printf("[Loaded Rule] %s => %s\n", link.From, link.To)
+		log.Printf("载入规则 %s => %s\n", link.From, link.To)
 		links[link.From] = link.To
 	}
+	log.Println("规则载入完毕 📦")
 }
 
 func main() {
