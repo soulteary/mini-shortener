@@ -47,7 +47,11 @@ func loadRules() (links []Link) {
 		log.Println(ERROR_CAN_NOT_OPEN_RULE)
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
