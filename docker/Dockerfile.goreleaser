@@ -1,0 +1,10 @@
+FROM alpine:3.16.0 as certs
+RUN apk --update add ca-certificates
+
+FROM scratch
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY mini-shortener /usr/bin/mini-shortener
+WORKDIR /app
+COPY rules /app/rules
+EXPOSE 8901/tcp
+ENTRYPOINT ["/usr/bin/mini-shortener"]

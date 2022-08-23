@@ -14,6 +14,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/soulteary/mini-shortener/internal/version"
 )
 
 const rulesFile = "./rules"
@@ -129,6 +131,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	log.Println("程序版本：", version.Version)
 	srv := &http.Server{Addr: ":" + port}
 	log.Println("服务监听端口：", port)
 	go func() {
