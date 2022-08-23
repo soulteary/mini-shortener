@@ -92,7 +92,10 @@ func route(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s => %s\n", r.URL.Path, redir)
 		http.Redirect(w, r, redir, http.StatusTemporaryRedirect)
 	} else {
-		w.Write(defaults)
+		_, err := w.Write(defaults)
+		if err != nil {
+			log.Printf("程序内部错误 💣")
+		}
 	}
 }
 
