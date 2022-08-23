@@ -136,7 +136,12 @@ func main() {
 	defer stop()
 
 	log.Println("程序版本：", version.Version)
-	srv := &http.Server{Addr: ":" + port}
+
+	srv := &http.Server{
+		Addr:              ":" + port,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       5 * time.Second,
+	}
 	log.Println("服务监听端口：", port)
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
