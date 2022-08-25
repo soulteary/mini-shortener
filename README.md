@@ -16,6 +16,8 @@ The program startup will read the `rules` file in the current working directory 
 
 ## Docker
 
+Download the rules configuration file in the project, or refer to the documentation above, create a local file, and execute the following commands:
+
 ```bash
 docker run -v `pwd`/rules:/app/rules -p 8080:8901 soulteary/mini-shortener -d
 ```
