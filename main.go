@@ -18,14 +18,17 @@ import (
 	"github.com/soulteary/mini-shortener/internal/version"
 )
 
-const rulesFile = "./rules"
-const defaultPort = 8901
-
 const (
-	WARN_RULE_NOT_FOUND     = "没有找到规则文件"
-	WARN_SCAN_RULE_ERR      = "读取规则文件遇到错误"
-	WARN_PARSE_RULE_ERR     = "解析规则文件遇到错误"
-	ERROR_CAN_NOT_OPEN_RULE = "读取规则文件出错"
+	DEFAULT_PORT                 = 8901
+	RULES_FILE                   = "./rules"
+	DEFAULT_RULE                 = `"/ping" => "https://github.com/soulteary/mini-shortener"`
+	INFO_FOUND_RULE              = "发现本地配置文件"
+	INFO_TRY_CREATE_EXAMPLE_RULE = "尝试创建示例配置文件"
+	WARN_RULE_NOT_FOUND          = "没有找到规则文件"
+	WARN_RULE_CREATE_FILE        = "尝试创建示例遇到错误"
+	WARN_SCAN_RULE_ERR           = "读取规则文件遇到错误"
+	WARN_PARSE_RULE_ERR          = "解析规则文件遇到错误"
+	ERROR_CAN_NOT_OPEN_RULE      = "读取规则文件遇到错误"
 )
 
 type Link struct {
@@ -34,15 +37,24 @@ type Link struct {
 }
 
 var links = make(map[string]string)
-var appPort = defaultPort
+var appPort = DEFAULT_PORT
 
-func loadRules() (links []Link) {
-	if _, err := os.Stat(rulesFile); errors.Is(err, os.ErrNotExist) {
+func loadRules(tryToCreateExampleRule bool) (links []Link) {
+	if _, err := os.Stat(RULES_FILE); errors.Is(err, os.ErrNotExist) {
 		log.Println(WARN_RULE_NOT_FOUND)
+		if tryToCreateExampleRule {
+			log.Println(INFO_TRY_CREATE_EXAMPLE_RULE)
+			err := os.WriteFile(RULES_FILE, []byte(DEFAULT_RULE), 0644)
+			if err != nil {
+				log.Println(WARN_RULE_CREATE_FILE)
+				return links
+			}
+			return loadRules(false)
+		}
 		return links
 	}
-
-	file, err := os.Open(rulesFile)
+	log.Println(INFO_FOUND_RULE)
+	file, err := os.Open(RULES_FILE)
 	if err != nil {
 		log.Println(ERROR_CAN_NOT_OPEN_RULE)
 		log.Fatal(err)
@@ -111,20 +123,20 @@ func init() {
 
 	userArgs := os.Args[1:]
 	if len(userArgs) == 0 {
-		if portEnv != defaultPort {
+		if portEnv != DEFAULT_PORT {
 			appPort = portEnv
 		}
 	} else {
 		for _, args := range userArgs {
 			if !(strings.Contains(args, "--port")) {
-				if portEnv != defaultPort {
+				if portEnv != DEFAULT_PORT {
 					appPort = portEnv
 				}
 			}
 		}
 	}
 
-	for _, link := range loadRules() {
+	for _, link := range loadRules(true) {
 		log.Printf("载入规则 %s => %s\n", link.From, link.To)
 		links[link.From] = link.To
 	}
