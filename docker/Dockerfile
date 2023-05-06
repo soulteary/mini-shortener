@@ -1,4 +1,4 @@
-FROM golang:1.19.0-alpine3.16 AS Builder
+FROM golang:1.20.0-alpine3.16 AS Builder
 WORKDIR /app
 ADD * .
 RUN go build -ldflags "-w -s" -v .
