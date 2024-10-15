@@ -8,34 +8,35 @@ on:
     tags:
       - 'v*'
 env:
-  GO_VERSION: "1.20"
+  GO_VERSION: "1.23.0"
+  GO111MODULE: on
+  DOCKER_CLI_EXPERIMENTAL: "enabled"
 
 permissions:
   contents: write
+  id-token: write
+  packages: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
-      DOCKER_CLI_EXPERIMENTAL: "enabled"
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       -
         name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
       -
         name: Cache Go modules
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -46,20 +47,26 @@ jobs:
         run: |
           go mod tidy
           go test -v ./...
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
+
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
         if: success() && startsWith(github.ref, 'refs/tags/')
         with:
-          version: latest
+          version: '~> v2'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
