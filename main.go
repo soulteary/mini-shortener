@@ -44,7 +44,7 @@ func loadRules(tryToCreateExampleRule bool) (links []Link) {
 		log.Println(WARN_RULE_NOT_FOUND)
 		if tryToCreateExampleRule {
 			log.Println(INFO_TRY_CREATE_EXAMPLE_RULE)
-			err := os.WriteFile(RULES_FILE, []byte(DEFAULT_RULE), 0644)
+			err := os.WriteFile(RULES_FILE, []byte(DEFAULT_RULE), 0600)
 			if err != nil {
 				log.Println(WARN_RULE_CREATE_FILE)
 				return links
